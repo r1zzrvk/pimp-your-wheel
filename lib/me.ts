@@ -46,6 +46,8 @@ export async function getMe(userId: string): Promise<MeResponse> {
 
   return {
     email: user.email,
+    displayName: user.displayName,
+    avatar: user.avatar,
     plan,
     balance: await getBalance(prisma, userId),
     spinsUsed,

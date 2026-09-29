@@ -62,7 +62,8 @@ async function main() {
   });
   const homeHtml = (await home.text()).replaceAll("<!-- -->", "");
   assert.equal(home.status, 200);
-  assert.match(homeHtml, /Настройки/);
+  assert.match(homeHtml, /href="\/profile"/);
+  assert.match(homeHtml, />Настройки</);
   assert.match(homeHtml, /e7d3a1/);
   assert.match(homeHtml, /Пропустить анимацию/);
   assert.match(homeHtml, /Фортуна/);
@@ -72,13 +73,21 @@ async function main() {
   assert.match(homeHtml, new RegExp(`Осталось ${PLAN_SPINS.FREE} из ${PLAN_SPINS.FREE}`));
   assert.match(homeHtml, /0 монет/);
 
-  const settings = await fetch(`${base}/settings`, {
+  const profile = await fetch(`${base}/profile`, {
     headers: { cookie: cookieHeader(jar) },
   });
-  const settingsHtml = (await settings.text()).replaceAll("<!-- -->", "");
-  assert.equal(settings.status, 200);
-  assert.match(settingsHtml, /Звуки/);
-  assert.match(settingsHtml, /Включены/);
+  const profileHtml = (await profile.text()).replaceAll("<!-- -->", "");
+  assert.equal(profile.status, 200);
+  assert.match(profileHtml, /Выключить звуки/);
+  assert.match(profileHtml, /aria-checked="true"/);
+  assert.match(profileHtml, /Выйти/);
+  assert.doesNotMatch(profileHtml, /<h1[^>]*>Профиль/);
+  const settings = await fetch(`${base}/settings`, {
+    redirect: "manual",
+    headers: { cookie: cookieHeader(jar) },
+  });
+  assert.equal(settings.status, 307);
+  assert.match(settings.headers.get("location") ?? "", /\/profile/);
   assert.match(homeHtml, /href="\/levels"/);
 
   const levels = await fetch(`${base}/levels`, {

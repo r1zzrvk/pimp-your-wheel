@@ -25,6 +25,8 @@ export type Progress = {
 
 export type MeResponse = Progress & {
   email: string;
+  displayName: string;
+  avatar: string;
   plan: PlanId;
   balance: number;
   spinsUsed: number;

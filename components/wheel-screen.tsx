@@ -48,6 +48,15 @@ export function WheelScreen({
   const [result, setResult] = useState<string | null>(null);
   const [resultTone, setResultTone] = useState<"success" | "error">("success");
   const [error, setError] = useState<string | null>(null);
+  const [wheelSize, setWheelSize] = useState(340);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const apply = () => setWheelSize(query.matches ? 280 : 340);
+    apply();
+    query.addEventListener("change", apply);
+    return () => query.removeEventListener("change", apply);
+  }, []);
   const [resetting, setResetting] = useState(false);
   const [skipAnimation, setSkipAnimation] = useState(false);
   const [xpVisible, setXpVisible] = useState(true);
@@ -181,27 +190,31 @@ export function WheelScreen({
         Осталось {profile.spinsLeft} из {profile.spinsLimit}
       </p>
       
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {profile.wheels.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            disabled={!item.unlocked || item.active || switching || spinning}
-            onClick={() => void chooseWheel(item.id)}
-            className={`rounded-full border px-4 py-2 text-sm disabled:cursor-not-allowed ${
-              item.active
-                ? "border-accent text-accent"
-                : "border-line text-muted disabled:opacity-50"
-            }`}
-          >
-            {item.unlocked ? item.name : `${item.name} · ${item.minLevel} ур.`}
-          </button>
-        ))}
-      </div>
+      <label className="relative mt-4 block w-full max-w-xs">
+        <span className="sr-only">Рулетка</span>
+        <select
+          value={profile.wheel.id}
+          disabled={switching || spinning}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (next !== profile.wheel.id) void chooseWheel(next);
+          }}
+          className="w-full appearance-none rounded-full border border-line bg-black/30 px-4 py-2.5 pr-10 text-base text-foreground scheme-dark disabled:opacity-50"
+        >
+          {profile.wheels.map((item) => (
+            <option key={item.id} value={item.id} disabled={!item.unlocked}>
+              {item.unlocked ? item.name : `${item.name} · ${item.minLevel} ур.`}
+            </option>
+          ))}
+        </select>
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-muted">
+          ▾
+        </span>
+      </label>
       {profile.guaranteedJackpot ? (
         <p className="mt-3 text-sm text-accent">Первая крутка сегодня — 100 монет</p>
       ) : null}
-      <div className="mt-8 flex w-[340px] max-w-full flex-col">
+      <div className="mt-8 flex w-full max-w-[340px] flex-col items-center">
         <div
           aria-hidden={!xpVisible}
           className={`grid transition-all duration-700 ease-out ${
@@ -234,6 +247,7 @@ export function WheelScreen({
           </div>
         </div>
         <Wheel
+          size={wheelSize}
           segments={profile.wheel.segments}
           rotation={rotation}
           spinning={spinning}
@@ -304,20 +318,36 @@ export function WheelScreen({
         </p>
       ) : null}
       {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
-      <label className="mt-6 flex items-center gap-2 text-sm text-muted">
-        <input
-          type="checkbox"
-          checked={skipAnimation}
-          onChange={(event) => setSkipAnimation(event.target.checked)}
-          className="size-4 accent-[#f2c14e]"
-        />
+      <label className="mt-6 flex items-center gap-2 text-sm text-muted w-full sm:w-auto">
+        <span className="grid size-4 shrink-0 place-items-center">
+          <input
+            type="checkbox"
+            checked={skipAnimation}
+            onChange={(event) => setSkipAnimation(event.target.checked)}
+            className="peer col-start-1 row-start-1 size-4 appearance-none rounded-[3px] border border-[#6f675c] bg-[#3a342c] checked:border-accent checked:bg-accent"
+          />
+          <svg
+            viewBox="0 0 16 16"
+            aria-hidden
+            className="pointer-events-none col-start-1 row-start-1 hidden h-3 w-3 peer-checked:block"
+          >
+            <path
+              d="M3.2 8.2 6.4 11.4 12.8 4.6"
+              fill="none"
+              stroke="#1a1408"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
         Пропустить анимацию
       </label>
       <button
         type="button"
         onClick={() => void spin()}
         disabled={busy || spinning || profile.spinsLeft <= 0}
-        className="mt-3 rounded-full bg-accent px-10 py-4 font-display text-lg text-[#1a1408] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-muted"
+        className="w-full sm:w-auto mt-3 rounded-full bg-accent px-10 py-4 font-display text-lg text-[#1a1408] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-muted"
       >
         {spinning ? "Крутится…" : profile.spinsLeft <= 0 ? "Лимит на сегодня" : "Крутить"}
       </button>

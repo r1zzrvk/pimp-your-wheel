@@ -1,5 +1,5 @@
-import { SettingsScreen } from "@/components/settings-screen";
+import { redirect } from "next/navigation";
 
 export default function SettingsPage() {
-  return <SettingsScreen />;
+  redirect("/profile");
 }
