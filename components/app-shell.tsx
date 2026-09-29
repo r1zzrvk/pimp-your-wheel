@@ -74,12 +74,6 @@ function TabIcon({ href }: { href: (typeof NAV)[number]["href"] }) {
           <path d="M9 8.5V7.2a3 3 0 0 1 6 0v1.3" {...pen} />
         </>
       ) : null}
-      {href === "/plans" ? (
-        <>
-          <rect x="3.5" y="6" width="17" height="12" rx="2" {...pen} />
-          <path d="M3.5 10h17M7 14.5h4" {...pen} />
-        </>
-      ) : null}
       {href === "/settings" ? (
         <>
           <path d="M4 7h16M4 12h16M4 17h16" {...pen} />

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { logoutAction } from "@/app/logout-action";
 import { useMe } from "@/components/me-context";
 import { AVATARS } from "@/lib/profile";
-import { playButton, setSoundsEnabled, soundsEnabled } from "@/lib/sounds";
+import { playButton, setSoundsEnabled, soundsEnabled, subscribeSounds } from "@/lib/sounds";
 
 function SpeakerIcon({ muted }: { muted: boolean }) {
   return (
@@ -44,12 +44,8 @@ export function ProfileScreen() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [sounds, setSounds] = useState(true);
+  const sounds = useSyncExternalStore(subscribeSounds, soundsEnabled, () => true);
   const pickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setSounds(soundsEnabled());
-  }, []);
 
   useEffect(() => {
     if (!picker) return;
@@ -85,7 +81,6 @@ export function ProfileScreen() {
   function toggleSounds() {
     const next = !sounds;
     setSoundsEnabled(next);
-    setSounds(next);
     if (next) playButton();
   }
 

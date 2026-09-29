@@ -73,11 +73,11 @@ async function main() {
   assert.match(homeHtml, new RegExp(`Осталось ${PLAN_SPINS.FREE} из ${PLAN_SPINS.FREE}`));
   assert.match(homeHtml, /0 монет/);
 
-  const profile = await fetch(`${base}/profile`, {
+  const profilePage = await fetch(`${base}/profile`, {
     headers: { cookie: cookieHeader(jar) },
   });
-  const profileHtml = (await profile.text()).replaceAll("<!-- -->", "");
-  assert.equal(profile.status, 200);
+  const profileHtml = (await profilePage.text()).replaceAll("<!-- -->", "");
+  assert.equal(profilePage.status, 200);
   assert.match(profileHtml, /Выключить звуки/);
   assert.match(profileHtml, /aria-checked="true"/);
   assert.match(profileHtml, /Выйти/);

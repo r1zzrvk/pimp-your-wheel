@@ -4,6 +4,7 @@ let context: AudioContext | null = null;
 let lastClickAt = 0;
 let enabled = true;
 let loaded = false;
+const listeners = new Set<() => void>();
 
 function readSetting() {
   if (loaded || typeof window === "undefined") return;
@@ -16,10 +17,18 @@ export function soundsEnabled() {
   return enabled;
 }
 
+export function subscribeSounds(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 export function setSoundsEnabled(next: boolean) {
   enabled = next;
   loaded = true;
   localStorage.setItem(STORAGE_KEY, next ? "on" : "off");
+  for (const listener of listeners) listener();
 }
 
 function audio() {
