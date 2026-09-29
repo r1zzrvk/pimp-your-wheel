@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  --background: #12100c;
+  --foreground: #f6f1e7;
+  --muted: #b7ad9e;
+  --line: rgba(246, 241, 231, 0.12);
+  --accent: #f0a202;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-unbounded);
+}
+
+body {
+  background:
+    radial-gradient(900px 420px at 50% -10%, rgba(240, 162, 2, 0.16), transparent 55%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes wheel-shine {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(253, 230, 138, 0.95));
+  }
+}
+
+.wheel-shine,
+.wheel-gold {
+  animation: wheel-shine 0.8s ease-in-out infinite;
+}
+
+@keyframes wheel-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.9));
+  }
+}
+
+.wheel-glow,
+.wheel-white {
+  animation: wheel-glow 1.2s ease-in-out infinite;
+}
+
+@keyframes wheel-fire {
+  0%,
+  100% {
+    filter: drop-shadow(0 4px 8px rgba(234, 88, 12, 0.45));
+  }
+  45% {
+    filter: drop-shadow(0 -8px 18px rgba(251, 146, 60, 0.95)) drop-shadow(0 0 10px rgba(220, 38, 38, 0.75));
+  }
+}
+
+.wheel-fire {
+  animation: wheel-fire 0.42s ease-in-out infinite;
+}
+
+@keyframes wheel-blaze {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.55));
+  }
+  35% {
+    filter: drop-shadow(0 -14px 22px rgba(249, 115, 22, 1)) drop-shadow(0 0 16px rgba(127, 29, 29, 0.9));
+  }
+  70% {
+    filter: drop-shadow(0 -4px 12px rgba(185, 28, 28, 0.8));
+  }
+}
+
+.wheel-blaze {
+  animation: wheel-blaze 0.28s linear infinite;
+}
+
+@keyframes wheel-spark {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  20% {
+    filter: drop-shadow(0 0 16px rgba(34, 211, 238, 0.95));
+  }
+  40% {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+  }
+}
+
+.wheel-spark {
+  animation: wheel-spark 0.35s steps(2, end) infinite;
+}
+
+@keyframes wheel-inferno {
+  0%,
+  100% {
+    filter: drop-shadow(0 6px 14px rgba(127, 29, 29, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 -16px 28px rgba(249, 115, 22, 1)) drop-shadow(0 0 18px rgba(69, 10, 10, 0.95));
+  }
+}
+
+.wheel-inferno {
+  animation: wheel-inferno 0.55s ease-in-out infinite;
+}
+
+@keyframes flame-mark {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    transform: translate(-50%, -78%) scale(1.2);
+  }
+}
+
+.flame-mark {
+  transform: translate(-50%, -50%);
+  animation: flame-mark 0.45s ease-in-out infinite;
+}
+
+@keyframes pointer-knock {
+  0% {
+    transform: rotate(0deg);
+  }
+  32% {
+    transform: rotate(-20deg);
+  }
+  68% {
+    transform: rotate(7deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

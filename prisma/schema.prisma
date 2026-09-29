@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  BASIC
+  PRO
+}
+
+enum WalletSource {
+  SPIN_REWARD
+  PURCHASE
+}
+
+model User {
+  id                   String              @id @default(cuid())
+  email                String              @unique
+  passwordHash         String
+  plan                 Plan                @default(FREE)
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  streak               Int                 @default(0)
+  lastStreakOn         DateTime?
+  xp                   Int                 @default(0)
+  activeWheel          String              @default("classic")
+  legendaryTheme       Boolean             @default(false)
+  shineTheme           Boolean             @default(false)
+  animation            String?
+  createdAt            DateTime            @default(now())
+  spins        Spin[]
+  transactions WalletTransaction[]
+  inventory    Inventory[]
+  equipped     Equipped?
+  limitResets  LimitReset[]
+}
+
+model LimitReset {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day             DateTime
+  spinsGranted    Int
+  stripeSessionId String   @unique
+  createdAt       DateTime @default(now())
+
+  @@index([userId, day])
+}
+
+model Spin {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coins        Int
+  segmentIndex Int
+  bonusSpins   Int                @default(0)
+  createdAt    DateTime           @default(now())
+  transaction  WalletTransaction?
+
+  @@index([userId, createdAt])
+}
+
+model WalletTransaction {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount     Int
+  source     WalletSource
+  spinId     String?      @unique
+  spin       Spin?        @relation(fields: [spinId], references: [id])
+  cosmeticId String?
+  cosmetic   Cosmetic?    @relation(fields: [cosmeticId], references: [id])
+  createdAt  DateTime     @default(now())
+
+  @@index([userId])
+}
+
+model Cosmetic {
+  id           String              @id @default(cuid())
+  slug         String              @unique
+  name         String
+  priceCoins   Int
+  primary      String
+  secondary    String
+  accent       String
+  transactions    WalletTransaction[]
+  inventory       Inventory[]
+  wheelEquipped      Equipped[]          @relation("WheelSkin")
+  pointerEquipped    Equipped[]          @relation("PointerSkin")
+  backgroundEquipped Equipped[]          @relation("BackgroundSkin")
+}
+
+model Inventory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cosmeticId  String
+  cosmetic    Cosmetic @relation(fields: [cosmeticId], references: [id])
+  purchasedAt DateTime @default(now())
+
+  @@unique([userId, cosmeticId])
+}
+
+model Equipped {
+  userId        String    @id
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wheelSkinId   String?
+  wheelSkin     Cosmetic? @relation("WheelSkin", fields: [wheelSkinId], references: [id])
+  pointerSkinId    String?
+  pointerSkin      Cosmetic? @relation("PointerSkin", fields: [pointerSkinId], references: [id])
+  backgroundSkinId String?
+  backgroundSkin   Cosmetic? @relation("BackgroundSkin", fields: [backgroundSkinId], references: [id])
+}

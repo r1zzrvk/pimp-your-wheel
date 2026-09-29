@@ -1,0 +1,2 @@
+ALTER TABLE "User" ADD COLUMN "activeWheel" TEXT NOT NULL DEFAULT 'classic';
+ALTER TABLE "User" ADD COLUMN "legendaryTheme" BOOLEAN NOT NULL DEFAULT false;
