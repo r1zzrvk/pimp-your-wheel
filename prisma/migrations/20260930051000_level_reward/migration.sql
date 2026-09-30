@@ -1,0 +1,1 @@
+ALTER TYPE "WalletSource" ADD VALUE 'LEVEL_REWARD';

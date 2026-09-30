@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMe } from "@/components/me-context";
+import type { AchievementUnlock } from "@/lib/types";
 import { Wheel } from "@/components/wheel";
 import { animationBySlug, backgroundGradient, pointerBySlug } from "@/lib/economy";
 import { LEGEND_HUB, paintSegments, UNLOCKS, WHEEL_SETS, wheelById, wheelLook } from "@/lib/wheels";
@@ -29,7 +30,7 @@ const TABS = [
 type ShopTab = (typeof TABS)[number]["id"];
 
 export function ShopScreen() {
-  const { me, refresh } = useMe();
+  const { me, refresh, announce } = useMe();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
   const [tab, setTab] = useState<ShopTab>("wheel");
@@ -44,9 +45,11 @@ export function ShopScreen() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cosmeticId: slug }),
     });
-    const data = (await response.json()) as { error?: string };
+    const data = (await response.json()) as { error?: string; achievements?: AchievementUnlock[] };
     if (!response.ok) {
       setError(ERROR_TEXT[data.error ?? ""] ?? "Покупка не удалась");
+    } else if (data.achievements?.length) {
+      announce(data.achievements);
     }
     await refresh();
     setPending(null);

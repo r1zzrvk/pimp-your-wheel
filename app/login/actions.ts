@@ -24,6 +24,7 @@ export async function registerAction(formData: FormData) {
     await registerUser(
       String(formData.get("email") ?? ""),
       String(formData.get("password") ?? ""),
+      String(formData.get("displayName") ?? ""),
     );
   } catch (error) {
     if (error instanceof RegisterError) {

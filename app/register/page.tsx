@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
+import { meta } from "@/components/meta";
+
+export const metadata = meta({
+  title: "Регистрация",
+  description: "Создай аккаунт и получи 100 бесплатных круток в сутки.",
+});
 import { auth } from "@/lib/auth";
 import { registerAction } from "../login/actions";
 
@@ -14,6 +20,7 @@ export default async function RegisterPage() {
       submitLabel="Создать аккаунт"
       alternateHref="/login"
       alternateLabel="Уже есть аккаунт? Войти"
+      nameField
       action={registerAction}
     />
   );

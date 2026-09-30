@@ -5,11 +5,11 @@ export function AdminFrame({
   error,
   children,
 }: {
-  current: "users" | "items";
+  current: "users" | "items" | "achievements";
   error?: string;
   children: React.ReactNode;
 }) {
-  const link = (id: "users" | "items", href: string, label: string) => (
+  const link = (id: "users" | "items" | "achievements", href: string, label: string) => (
     <a
       href={href}
       data-sound="menu"
@@ -34,6 +34,7 @@ export function AdminFrame({
       <nav className="mt-4 flex gap-2">
         {link("users", "/admin", "Игроки")}
         {link("items", "/admin/items", "Товары")}
+        {link("achievements", "/admin/achievements", "Достижения")}
       </nav>
       {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
       {children}

@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
+import { meta } from "@/components/meta";
+
+export const metadata = meta({
+  title: "Вход",
+  description: "Войди и крути сегодняшние попытки.",
+});
 import { auth } from "@/lib/auth";
 import { loginAction } from "./actions";
 

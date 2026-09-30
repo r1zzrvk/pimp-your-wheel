@@ -2,6 +2,31 @@ import { utcDayStart } from "@/lib/day";
 
 export const XP_PER_SPIN = 10;
 export const LEVEL_LIST_CAP = 100;
+const LEVEL_REWARD_MIN = 50;
+const LEVEL_REWARD_MAX = 500;
+
+export function levelPayout(level: number) {
+  if (level < 2 || level % 2 !== 0) return null;
+  const clamped = Math.min(level, LEVEL_LIST_CAP);
+  const span = LEVEL_LIST_CAP - 2;
+  const raw =
+    LEVEL_REWARD_MIN +
+    Math.round(((clamped - 2) * (LEVEL_REWARD_MAX - LEVEL_REWARD_MIN)) / span);
+  const amount = Math.min(LEVEL_REWARD_MAX, Math.max(LEVEL_REWARD_MIN, Math.round(raw / 10) * 10));
+  return { coins: amount, xp: amount };
+}
+
+export function levelRewardsBetween(fromLevel: number, toLevel: number) {
+  let coins = 0;
+  let xp = 0;
+  for (let level = fromLevel + 1; level <= toLevel; level += 1) {
+    const payout = levelPayout(level);
+    if (!payout) continue;
+    coins += payout.coins;
+    xp += payout.xp;
+  }
+  return { coins, xp };
+}
 
 export function levelSteps(count: number) {
   const rows: { level: number; xp: number; step: number }[] = [];

@@ -2,34 +2,11 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { logoutAction } from "@/app/logout-action";
+import { Icon } from "@/components/icon";
 import { useMe } from "@/components/me-context";
+import { achievementGoal } from "@/lib/achievement-rules";
 import { AVATARS } from "@/lib/profile";
 import { playButton, setSoundsEnabled, soundsEnabled, subscribeSounds } from "@/lib/sounds";
-
-function SpeakerIcon({ muted }: { muted: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
-      <path d="M4 9.5v5h3.2L12 18.5v-13L7.2 9.5H4Z" fill="currentColor" />
-      {muted ? (
-        <path
-          d="M15.5 9.5 20 14.5M20 9.5 15.5 14.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-      ) : (
-        <path
-          d="M15.2 9.2a4 4 0 0 1 0 5.6M17.4 7a6.8 6.8 0 0 1 0 10"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-      )}
-    </svg>
-  );
-}
 
 const ERROR_TEXT: Record<string, string> = {
   NAME_TOO_LONG: "Имя не длиннее 24 символов",
@@ -43,7 +20,7 @@ export function ProfileScreen() {
   const [picker, setPicker] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(true);
   const sounds = useSyncExternalStore(subscribeSounds, soundsEnabled, () => true);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +90,7 @@ export function ProfileScreen() {
               />
             </label>
           </div>
+          {pending || saved ? null : (
           <button
             type="button"
             disabled={pending || saved}
@@ -121,6 +99,7 @@ export function ProfileScreen() {
           >
             {saved ? "Сохранено" : "Сохранить"}
           </button>
+        )}
         </div>
         {error ? <p className="mt-3 text-sm text-red-300">{error}</p> : null}
         {picker ? (
@@ -146,6 +125,35 @@ export function ProfileScreen() {
           </div>
         ) : null}
       </div>
+      <div className="rounded-3xl border border-line bg-white/5 p-4 sm:p-5">
+        <h2 className="font-display text-xl">Достижения</h2>
+        {me.achievements.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">Пока нет достижений.</p>
+        ) : (
+          <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {me.achievements.map((item) => (
+              <li
+                key={item.id}
+                className={`rounded-2xl border px-3 py-3 ${
+                  item.unlocked ? "border-accent/70 bg-white/5" : "border-line text-muted"
+                }`}
+              >
+                <span
+                  className={`grid size-10 place-items-center rounded-full text-xl ${
+                    item.unlocked ? "bg-white/10" : "bg-black/30 grayscale"
+                  }`}
+                >
+                  {item.emoji}
+                </span>
+                <p className={`mt-2 text-sm ${item.unlocked ? "text-foreground" : ""}`}>{item.name}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {item.unlocked ? "Открыто" : achievementGoal(item.metric, item.threshold)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <div className="flex flex-col gap-4 rounded-3xl border border-line bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center justify-between gap-4 sm:justify-start">
           <span className="text-sm text-muted">Звук</span>
@@ -166,21 +174,21 @@ export function ProfileScreen() {
             <span
               className={`relative z-10 grid size-9 place-items-center ${sounds ? "text-muted" : "text-[#1a1408]"}`}
             >
-              <SpeakerIcon muted />
+              <Icon name="volume-mute" size={16} />
             </span>
             <span
               className={`relative z-10 grid size-9 place-items-center ${sounds ? "text-[#1a1408]" : "text-muted"}`}
             >
-              <SpeakerIcon muted={false} />
+              <Icon name="volume" size={16} />
             </span>
           </button>
         </div>
         <form action={logoutAction}>
           <button
             type="submit"
-            className="w-full rounded-full bg-red-600 px-5 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-red-500 sm:w-auto sm:px-8"
+            className="w-full rounded-full bg-transparent border border-red-600 px-5 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-red-600 sm:w-auto sm:px-8"
           >
-            Выйти
+            Выйти из аккаунта
           </button>
         </form>
       </div>

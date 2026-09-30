@@ -160,3 +160,25 @@ export function playLoss() {
 export function playBonus() {
   chime([659, 784, 988, 1318], 0.055, 0.04);
 }
+
+export function playAchievement() {
+  const ctx = audio();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((frequency, index) => {
+    const start = now + index * 0.07;
+    const last = index === notes.length - 1;
+    const tone = ctx.createOscillator();
+    const gain = ctx.createGain();
+    tone.type = last ? "triangle" : "sine";
+    tone.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(last ? 0.055 : 0.035, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + (last ? 0.32 : 0.16));
+    tone.connect(gain);
+    gain.connect(ctx.destination);
+    tone.start(start);
+    tone.stop(start + (last ? 0.34 : 0.18));
+  });
+}

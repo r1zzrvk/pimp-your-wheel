@@ -55,6 +55,20 @@ async function main() {
   assert.equal(first.streak, 1);
   assert.equal(first.xp, 10);
 
+  const climber = await registerUser(`level-${Date.now()}@example.com`, "password123");
+  const badge = await prisma.achievement.create({
+    data: { name: "Тестовый рубеж", emoji: "🏅", metric: "LEVEL", threshold: 2, description: "" },
+  });
+  await prisma.user.update({ where: { id: climber.id }, data: { xp: 40 } });
+  const leveled = await performSpin(climber.id);
+  assert.equal(leveled.level, 2);
+  assert.equal(leveled.xp, 100);
+  assert.equal(leveled.balance, Math.max(0, leveled.coins) + 50);
+  assert.ok(leveled.achievements.some((item) => item.id === badge.id));
+  const again = await performSpin(climber.id);
+  assert.equal(again.achievements.some((item) => item.id === badge.id), false);
+  await prisma.achievement.delete({ where: { id: badge.id } });
+
   const streakUser = await registerUser(`streak-${Date.now()}@example.com`, "password123");
   await prisma.user.update({
     where: { id: streakUser.id },

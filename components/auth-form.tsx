@@ -9,6 +9,7 @@ type AuthFormProps = {
   submitLabel: string;
   alternateHref: string;
   alternateLabel: string;
+  nameField?: boolean;
   action: (formData: FormData) => Promise<{ error: string } | undefined>;
 };
 
@@ -18,6 +19,7 @@ export function AuthForm({
   submitLabel,
   alternateHref,
   alternateLabel,
+  nameField = false,
   action,
 }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,19 @@ export function AuthForm({
       <h1 className="mt-3 font-display text-4xl leading-tight">{title}</h1>
       <p className="mt-3 text-muted">{subtitle}</p>
       <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4">
+        {nameField ? (
+          <label className="flex flex-col gap-2 text-sm">
+            Имя
+            <input
+              name="displayName"
+              type="text"
+              autoComplete="nickname"
+              required
+              maxLength={24}
+              className="rounded-2xl border border-line bg-white/5 px-4 py-3 text-base outline-none focus:border-accent"
+            />
+          </label>
+        ) : null}
         <label className="flex flex-col gap-2 text-sm">
           Email
           <input

@@ -30,6 +30,8 @@ async function main() {
   const registerHtml = await registerPage.text();
   assert.match(registerHtml, /Создать аккаунт/);
   assert.match(registerHtml, /100 бесплатных круток/);
+  assert.match(registerHtml, /name="displayName"/);
+  assert.match(registerHtml, /required/);
 
   const email = `http-${Date.now()}@example.com`;
   const password = "password123";
@@ -63,7 +65,7 @@ async function main() {
   const homeHtml = (await home.text()).replaceAll("<!-- -->", "");
   assert.equal(home.status, 200);
   assert.match(homeHtml, /href="\/profile"/);
-  assert.match(homeHtml, />Настройки</);
+  assert.doesNotMatch(homeHtml, />Настройки</);
   assert.match(homeHtml, /e7d3a1/);
   assert.match(homeHtml, /Пропустить анимацию/);
   assert.match(homeHtml, /Фортуна/);
@@ -96,13 +98,13 @@ async function main() {
   const levelsHtml = (await levels.text()).replaceAll("<!-- -->", "");
   assert.equal(levels.status, 200);
   assert.match(levelsHtml, /Уровень 1/);
-  assert.match(levelsHtml, /Уровень 100/);
-  assert.match(levelsHtml, /Тема «Легенда»/);
-  assert.match(levelsHtml, /Фон «Рассвет»/);
-  assert.match(levelsHtml, /Фон «Трон»/);
-  assert.match(levelsHtml, /Указатель «Трезубец»/);
-  assert.match(levelsHtml, /Анимация «Инферно»/);
-  assert.match(levelsHtml, /Указатель «Череп»/);
+  assert.match(levelsHtml, /Уровень 5/);
+  assert.match(levelsHtml, /Показать еще/);
+  assert.doesNotMatch(levelsHtml, /Уровень 6/);
+  assert.doesNotMatch(levelsHtml, /Уровень 100/);
+  assert.match(levelsHtml, /Рулетка «Удача»/);
+  assert.match(levelsHtml, /50 монет и 50 XP/);
+  assert.match(levelsHtml, /60 монет и 60 XP/);
 
   const spins = [];
   for (let i = 0; i < 3; i++) {

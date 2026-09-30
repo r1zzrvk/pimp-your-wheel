@@ -1,3 +1,4 @@
+import { grantAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/db";
 import { countAllowance } from "@/lib/allowance";
 import { cosmeticRule, pointerBySlug, type PlanId } from "@/lib/economy";
@@ -6,7 +7,13 @@ import { nextUtcMidnight, utcDayStart } from "@/lib/day";
 import { ApiError } from "@/lib/api-error";
 import { lockUser } from "@/lib/lock";
 import { pickReward } from "@/lib/pick-reward";
-import { advanceStreak, levelProgress, progressSnapshot, XP_PER_SPIN } from "@/lib/progress";
+import {
+  advanceStreak,
+  levelProgress,
+  levelRewardsBetween,
+  progressSnapshot,
+  XP_PER_SPIN,
+} from "@/lib/progress";
 import { jackpotSegmentIndex, wheelForLevel, WHEELS } from "@/lib/wheels";
 import type { SpinResponse } from "@/lib/types";
 
@@ -27,7 +34,19 @@ export async function performSpin(userId: string): Promise<SpinResponse> {
       streakUpdate.advanced && streakUpdate.streak === 7
         ? { coins: jackpot.coins, extraSpins: 0, segmentIndex: jackpotIndex }
         : pickReward(wheel.segments);
-    const xp = user.xp + XP_PER_SPIN;
+    const levelBefore = levelProgress(user.xp).level;
+    let xp = user.xp + XP_PER_SPIN;
+    let bonusCoins = 0;
+    let grantedThrough = levelBefore;
+    while (true) {
+      const reached = levelProgress(xp).level;
+      if (reached <= grantedThrough) break;
+      const bonus = levelRewardsBetween(grantedThrough, reached);
+      grantedThrough = reached;
+      if (bonus.coins === 0 && bonus.xp === 0) break;
+      bonusCoins += bonus.coins;
+      xp += bonus.xp;
+    }
     await tx.user.update({
       where: { id: userId },
       data: {
@@ -59,7 +78,17 @@ export async function performSpin(userId: string): Promise<SpinResponse> {
         },
       });
     }
+    if (bonusCoins > 0) {
+      await tx.walletTransaction.create({
+        data: {
+          userId,
+          amount: bonusCoins,
+          source: "LEVEL_REWARD",
+        },
+      });
+    }
 
+    const unlocked = await grantAchievements(tx, userId, { spinCoins: coins });
     const spinsLimit = allowance.spinsLimit + reward.extraSpins;
     return {
       coins,
@@ -72,6 +101,7 @@ export async function performSpin(userId: string): Promise<SpinResponse> {
       streak: streakUpdate.streak,
       xp,
       ...levelProgress(xp),
+      achievements: unlocked,
       guaranteedJackpot: progressSnapshot(
         xp,
         streakUpdate.streak,
@@ -126,7 +156,7 @@ export async function performSetLegend(userId: string, enabled: boolean) {
 }
 
 export async function performPurchase(userId: string, slug: string) {
-  await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     await lockUser(tx, userId);
     const cosmetic = await tx.cosmetic.findUnique({ where: { slug } });
     if (!cosmetic) throw new ApiError(404, "NOT_FOUND");
@@ -154,6 +184,7 @@ export async function performPurchase(userId: string, slug: string) {
     await tx.inventory.create({
       data: { userId, cosmeticId: cosmetic.id },
     });
+    return grantAchievements(tx, userId);
   });
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ResetCountdown } from "@/components/reset-countdown";
 import { useMe } from "@/components/me-context";
+import { Icon } from "@/components/icon";
 import { Wheel } from "@/components/wheel";
 import { LIMIT_RESET_LABEL } from "@/lib/economy";
 import { closePaymentWindow, goToPayment, openPaymentWindow } from "@/lib/payment-window";
@@ -34,12 +35,13 @@ export function WheelScreen({
 }: {
   resetNotice?: "success" | "cancel" | null;
 }) {
-  const { me, refresh, patch } = useMe();
+  const { me, refresh, patch, announce } = useMe();
   const rotationRef = useRef(0);
   const pendingLabel = useRef<string | null>(null);
   const pendingCoins = useRef(0);
   const pendingSpins = useRef(0);
   const pendingTone = useRef<"success" | "error">("success");
+  const pendingAchievements = useRef<SpinResponse["achievements"]>([]);
   const popupId = useRef(0);
   const elapsedLock = useRef(false);
   const [rotation, setRotation] = useState(0);
@@ -48,11 +50,11 @@ export function WheelScreen({
   const [result, setResult] = useState<string | null>(null);
   const [resultTone, setResultTone] = useState<"success" | "error">("success");
   const [error, setError] = useState<string | null>(null);
-  const [wheelSize, setWheelSize] = useState(340);
+  const [wheelSize, setWheelSize] = useState(450);
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 767px)");
-    const apply = () => setWheelSize(query.matches ? 280 : 340);
+    const apply = () => setWheelSize(query.matches ? 280 : 450);
     apply();
     query.addEventListener("change", apply);
     return () => query.removeEventListener("change", apply);
@@ -151,6 +153,7 @@ export function WheelScreen({
       pendingCoins.current = data.coins;
       pendingSpins.current = data.extraSpins;
     }
+    pendingAchievements.current = data.achievements ?? [];
     patch({
       balance: data.balance,
       spinsLeft: data.spinsLeft,
@@ -181,18 +184,10 @@ export function WheelScreen({
   }
 
   return (
-    <section className="mx-auto flex max-w-xl flex-col items-center text-center">
-      <p className="text-xl uppercase tracking-[0.2em] text-muted">
-        {profile.wheel.name}
-        {profile.wheel.skinName ? ` · ${profile.wheel.skinName}` : ""}
-      </p>
-      <p className="mt-3 text-muted">
-        Осталось {profile.spinsLeft} из {profile.spinsLimit}
-      </p>
-      
-      <label className="relative mt-4 block w-full max-w-xs">
-        <span className="sr-only">Рулетка</span>
+    <section className="mx-auto flex  w-full lg:w-auto lg:max-w-xl flex-col items-center text-center">
+        <label className="text-sm text-muted self-start mb-1">Выбор уровня</label>
         <select
+          data-tour="wheels"
           value={profile.wheel.id}
           disabled={switching || spinning}
           onChange={(event) => {
@@ -210,19 +205,24 @@ export function WheelScreen({
         <span aria-hidden className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-muted">
           ▾
         </span>
-      </label>
+      <p className="mt-3 text-muted">
+        Осталось {profile.spinsLeft} из {profile.spinsLimit}
+      </p>
       {profile.guaranteedJackpot ? (
         <p className="mt-3 text-sm text-accent">Первая крутка сегодня — 100 монет</p>
       ) : null}
       <div className="mt-8 flex w-full max-w-[340px] flex-col items-center">
         <div
           aria-hidden={!xpVisible}
-          className={`grid transition-all duration-700 ease-out ${
-            xpVisible ? "mb-3 grid-rows-[1fr] opacity-100" : "mb-0 grid-rows-[0fr] opacity-0"
+          className={`grid w-full transition-all duration-700 ease-out ${
+            xpVisible ? "mb-3 grid-rows-[3fr] opacity-100" : "mb-0 grid-rows-[0fr] opacity-0"
           }`}
         >
-          <div className={`overflow-hidden text-left ${xpVisible ? "" : "pointer-events-none"}`}>
-            <div className="flex justify-between text-sm text-muted">
+          <div
+            data-tour="xp"
+            className={`overflow-hidden p-4 rounded-3xl text-left ${xpVisible ? "" : "pointer-events-none"}`}
+          >
+            <div className="flex w-full justify-between text-sm text-muted">
               <Link href="/levels" data-sound="menu" className="hover:text-accent">
                 Уровень {profile.level}
               </Link>
@@ -235,7 +235,7 @@ export function WheelScreen({
               className="mt-2 block h-2 overflow-hidden rounded-full bg-white/10"
             >
               <div
-                className="h-full bg-accent"
+                className="h-full bg-accent w-full"
                 style={{
                   width: `${Math.min(100, (profile.xpIntoLevel / profile.xpForNext) * 100)}%`,
                 }}
@@ -246,6 +246,7 @@ export function WheelScreen({
             </p>
           </div>
         </div>
+        <div data-tour="wheel" className="rounded-full">
         <Wheel
           size={wheelSize}
           segments={profile.wheel.segments}
@@ -266,6 +267,9 @@ export function WheelScreen({
             setSpinning(false);
             setBusy(false);
             const label = pendingLabel.current;
+            const unlocked = pendingAchievements.current;
+            pendingAchievements.current = [];
+            if (unlocked.length > 0) announce(unlocked);
             if (!label) return;
             if (pendingTone.current === "error") playLoss();
             else if (pendingSpins.current > 0) playBonus();
@@ -278,6 +282,7 @@ export function WheelScreen({
             }, 1000);
           }}
         />
+        </div>
       </div>
       {result ? (
         <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center">
@@ -326,25 +331,17 @@ export function WheelScreen({
             onChange={(event) => setSkipAnimation(event.target.checked)}
             className="peer col-start-1 row-start-1 size-4 appearance-none rounded-[3px] border border-[#6f675c] bg-[#3a342c] checked:border-accent checked:bg-accent"
           />
-          <svg
-            viewBox="0 0 16 16"
-            aria-hidden
-            className="pointer-events-none col-start-1 row-start-1 hidden h-3 w-3 peer-checked:block"
-          >
-            <path
-              d="M3.2 8.2 6.4 11.4 12.8 4.6"
-              fill="none"
-              stroke="#1a1408"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Icon
+            name="check"
+            size={12}
+            className="pointer-events-none col-start-1 row-start-1 hidden! text-[#1a1408] peer-checked:inline-block!"
+          />
         </span>
         Пропустить анимацию
       </label>
       <button
         type="button"
+        data-tour="spin"
         onClick={() => void spin()}
         disabled={busy || spinning || profile.spinsLeft <= 0}
         className="w-full sm:w-auto mt-3 rounded-full bg-accent px-10 py-4 font-display text-lg text-[#1a1408] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-muted"

@@ -1,7 +1,13 @@
+import { meta } from "@/components/meta";
 import { PlansScreen } from "@/components/plans-screen";
 import { auth } from "@/lib/auth";
 import { getBilling, syncBilling } from "@/lib/billing";
 import { redirect } from "next/navigation";
+
+export const metadata = meta({
+  title: "Подписка",
+  description: "Список подписок",
+});
 
 export default async function PlansPage({
   searchParams,

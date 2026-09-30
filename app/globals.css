@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@flaticon/flaticon-uicons/css/regular/rounded.css";
+@import "@flaticon/flaticon-uicons/css/solid/rounded.css";
 
 :root {
   --background: #12100c;
@@ -136,6 +138,31 @@ a {
 .flame-mark {
   transform: translate(-50%, -50%);
   animation: flame-mark 0.45s ease-in-out infinite;
+}
+
+@keyframes snack-in {
+  from {
+    transform: translateY(1.25rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.snack-in {
+  animation: snack-in 0.35s ease-out;
+}
+
+.fi-sr-currency::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  -webkit-mask: url("/icons/fi-sr-currency.png") center / contain no-repeat;
+  mask: url("/icons/fi-sr-currency.png") center / contain no-repeat;
 }
 
 @keyframes pointer-knock {

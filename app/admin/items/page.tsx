@@ -1,4 +1,10 @@
+import { meta } from "@/components/meta";
 import { cosmeticKind } from "@/lib/economy";
+
+export const metadata = meta({
+  title: "Предметы",
+  description: "Предметы магазина.",
+});
 import { adminConfigured, isAdmin } from "@/lib/admin-gate";
 import { prisma } from "@/lib/db";
 import { giveCosmetic, loginAdmin, saveCosmetic } from "../actions";

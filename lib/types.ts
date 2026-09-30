@@ -14,6 +14,20 @@ export type CosmeticView = {
   kind: "wheel" | "pointer" | "background" | "animation";
 };
 
+export type AchievementUnlock = {
+  id: string;
+  name: string;
+  emoji: string;
+};
+
+export type AchievementView = AchievementUnlock & {
+  description: string;
+  metric: "LEVEL" | "SPINS" | "STREAK" | "BALANCE" | "SPIN_WIN" | "ITEMS";
+  threshold: number;
+  unlocked: boolean;
+  unlockedAt: string | null;
+};
+
 export type Progress = {
   streak: number;
   xp: number;
@@ -73,6 +87,7 @@ export type MeResponse = Progress & {
     unlocked: boolean;
   }>;
   cosmetics: CosmeticView[];
+  achievements: AchievementView[];
 };
 
 export type SpinResponse = {
@@ -83,4 +98,5 @@ export type SpinResponse = {
   spinsLimit: number;
   nextResetAt: string;
   balance: number;
+  achievements: AchievementUnlock[];
 } & Progress;

@@ -1,6 +1,12 @@
+import { meta } from "@/components/meta";
 import { WheelScreen } from "@/components/wheel-screen";
 import { auth } from "@/lib/auth";
 import { claimLimitResetSession } from "@/lib/limit-reset";
+
+export const metadata = meta({
+  title: "Главная",
+  description: "Крути рулетку и забирай монеты.",
+});
 
 export default async function HomePage({
   searchParams,

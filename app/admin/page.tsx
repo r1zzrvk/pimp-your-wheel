@@ -1,4 +1,9 @@
+import { meta } from "@/components/meta";
 import { getBalance } from "@/lib/balance";
+
+export const metadata = meta({
+  title: "Админка",
+});
 import { adminConfigured, isAdmin } from "@/lib/admin-gate";
 import { prisma } from "@/lib/db";
 import { levelProgress } from "@/lib/progress";

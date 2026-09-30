@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
+import { meta, SITE_NAME } from "@/components/meta";
 import { SoundClicks } from "@/components/sound-clicks";
 import "./globals.css";
 
@@ -14,8 +15,17 @@ const display = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Pimp your wheel",
-  description: "Крути рулетку, копи монеты и собирай свою рулетку.",
+  ...meta(),
+  metadataBase: new URL(process.env.AUTH_URL || "http://localhost:3000"),
+  title: {
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#12100c",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

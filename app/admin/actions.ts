@@ -3,7 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { timingSafeEqual } from "node:crypto";
 import { redirect } from "next/navigation";
-import type { Plan } from "@prisma/client";
+import type { AchievementMetric, Plan } from "@prisma/client";
+import { ACHIEVEMENT_METRICS } from "@/lib/achievements";
 import { clearAdminCookie, isAdmin, setAdminCookie } from "@/lib/admin-gate";
 import { utcDayStart } from "@/lib/day";
 import { prisma } from "@/lib/db";
@@ -130,5 +131,44 @@ export async function giveCosmetic(formData: FormData) {
     update: {},
     create: { userId: user.id, cosmeticId: cosmetic.id },
   });
+  back(formData);
+}
+
+const METRICS = new Set<AchievementMetric>(ACHIEVEMENT_METRICS);
+
+function achievementFields(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const emoji = String(formData.get("emoji") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const metric = String(formData.get("metric") ?? "") as AchievementMetric;
+  const threshold = Number(formData.get("threshold"));
+  if (!name || name.length > 40 || !emoji || emoji.length > 16 || description.length > 140) return null;
+  if (!METRICS.has(metric) || !Number.isInteger(threshold) || threshold < 1 || threshold > 1_000_000) {
+    return null;
+  }
+  return { name, emoji, description, metric, threshold };
+}
+
+export async function createAchievement(formData: FormData) {
+  await guard();
+  const fields = achievementFields(formData);
+  if (!fields) back(formData, "Некорректное достижение");
+  await prisma.achievement.create({ data: fields });
+  back(formData);
+}
+
+export async function saveAchievement(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const fields = achievementFields(formData);
+  if (!fields) back(formData, "Некорректное достижение");
+  await prisma.achievement.update({ where: { id }, data: fields });
+  back(formData);
+}
+
+export async function deleteAchievement(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  await prisma.achievement.delete({ where: { id } });
   back(formData);
 }

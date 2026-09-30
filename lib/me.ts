@@ -1,3 +1,4 @@
+import { grantAchievements, listAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/db";
 import { countAllowance } from "@/lib/allowance";
 import {
@@ -35,6 +36,8 @@ export async function getMe(userId: string): Promise<MeResponse> {
   const allowance = await countAllowance(prisma, userId, plan);
   const spinsUsed = allowance.used;
   const spinsLimit = allowance.spinsLimit;
+  await grantAchievements(prisma, userId);
+  const achievements = await listAchievements(prisma, userId);
   const progress = progressSnapshot(user.xp, user.streak, user.lastStreakOn);
   const wheel = wheelForLevel(user.activeWheel, progress.level);
   const legendary = user.legendaryTheme && progress.level >= 50;
@@ -120,5 +123,6 @@ export async function getMe(userId: string): Promise<MeResponse> {
         kind,
       };
     }),
+    achievements,
   };
 }

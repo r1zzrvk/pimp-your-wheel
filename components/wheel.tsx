@@ -310,8 +310,8 @@ function WheelPointer({
           </span>
         ) : (
           <div
-            className="mt-1 h-0 w-0 border-x-transparent border-t-accent drop-shadow"
-            style={{ borderLeftWidth: 16, borderRightWidth: 16, borderTopWidth: 30 }}
+            className="mt-1 h-0 w-0 border-x-transparent border-t-accent drop-shadow rounded-full"
+            style={{ borderLeftWidth: 20, borderRightWidth: 20, borderTopWidth: 36 }}
           />
         )}
       </div>

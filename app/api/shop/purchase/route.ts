@@ -14,8 +14,8 @@ export async function POST(request: Request) {
     if (typeof body.cosmeticId !== "string" || body.cosmeticId.length === 0) {
       throw new ApiError(400, "NOT_FOUND");
     }
-    await performPurchase(userId, body.cosmeticId);
-    return Response.json({ ok: true });
+    const achievements = await performPurchase(userId, body.cosmeticId);
+    return Response.json({ ok: true, achievements });
   } catch (error) {
     return errorResponse(error);
   }

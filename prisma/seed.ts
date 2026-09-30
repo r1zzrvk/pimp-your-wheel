@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { STARTER_ACHIEVEMENTS } from "../lib/achievements";
 import { ANIMATIONS, BACKGROUNDS, COSMETICS, POINTERS } from "../lib/economy";
 
 const prisma = new PrismaClient();
@@ -16,6 +17,14 @@ async function main() {
       where: { slug: item.slug },
       update: data,
       create: { slug: item.slug, ...data },
+    });
+  }
+
+  for (const item of STARTER_ACHIEVEMENTS) {
+    await prisma.achievement.upsert({
+      where: { slug: item.slug },
+      update: {},
+      create: item,
     });
   }
 }

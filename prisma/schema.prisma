@@ -16,6 +16,16 @@ enum Plan {
 enum WalletSource {
   SPIN_REWARD
   PURCHASE
+  LEVEL_REWARD
+}
+
+enum AchievementMetric {
+  LEVEL
+  SPINS
+  STREAK
+  BALANCE
+  SPIN_WIN
+  ITEMS
 }
 
 model User {
@@ -35,11 +45,36 @@ model User {
   shineTheme           Boolean             @default(false)
   animation            String?
   createdAt            DateTime            @default(now())
-  spins        Spin[]
-  transactions WalletTransaction[]
-  inventory    Inventory[]
-  equipped     Equipped?
-  limitResets  LimitReset[]
+  spins            Spin[]
+  transactions     WalletTransaction[]
+  inventory        Inventory[]
+  equipped         Equipped?
+  limitResets      LimitReset[]
+  achievements     UserAchievement[]
+}
+
+model Achievement {
+  id          String              @id @default(cuid())
+  slug        String?             @unique
+  name        String
+  emoji       String
+  description String              @default("")
+  metric      AchievementMetric
+  threshold   Int
+  createdAt   DateTime            @default(now())
+  unlocks     UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
 }
 
 model LimitReset {
