@@ -286,7 +286,8 @@ function TourCard({
   );
 }
 
-export function OnboardingTour({ email, children }: { email: string; children: ReactNode }) {
+export function OnboardingTour({ email, children }: { email: string | null; children: ReactNode }) {
+  if (!email) return children;
   return (
     <OnboardingProvider
       steps={STEPS}

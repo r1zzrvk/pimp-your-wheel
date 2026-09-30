@@ -15,8 +15,8 @@ export default async function RegisterPage() {
 
   return (
     <AuthForm
-      title="Создать аккаунт"
-      subtitle="100 бесплатных круток в сутки. Скины покупаются за монеты с колеса."
+      title="Готов начать?"
+      subtitle="Создай аккаунт и начинай крутить."
       submitLabel="Создать аккаунт"
       alternateHref="/login"
       alternateLabel="Уже есть аккаунт? Войти"

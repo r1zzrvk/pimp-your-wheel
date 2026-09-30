@@ -223,7 +223,7 @@ function WheelShell({
   const style = { width: size, height: size };
   if (!onPress) {
     return (
-      <div className="relative" style={style}>
+      <div className="relative overflow-hidden" style={style}>
         {children}
       </div>
     );
@@ -234,7 +234,7 @@ function WheelShell({
       disabled={disabled}
       onClick={onPress}
       aria-label="Крутить"
-      className="relative block cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed"
+      className="relative block cursor-pointer overflow-hidden border-0 bg-transparent p-0 disabled:cursor-not-allowed"
       style={style}
     >
       {children}

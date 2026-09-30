@@ -19,8 +19,9 @@ function cookieHeader(jar: Map<string, string>) {
 
 async function main() {
   const anon = await fetch(`${base}/`, { redirect: "manual" });
-  assert.equal(anon.status, 307);
-  assert.match(anon.headers.get("location") ?? "", /\/login/);
+  assert.equal(anon.status, 200);
+  assert.equal(anon.headers.get("location"), null);
+  assert.match(await anon.text(), /Войти/);
 
   const loginPage = await fetch(`${base}/login`);
   assert.equal(loginPage.status, 200);

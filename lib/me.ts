@@ -48,6 +48,7 @@ export async function getMe(userId: string): Promise<MeResponse> {
       : "white";
 
   return {
+    guest: false,
     email: user.email,
     displayName: user.displayName,
     avatar: user.avatar,

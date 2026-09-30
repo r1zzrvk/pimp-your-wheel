@@ -36,7 +36,10 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
 
+  const guest = initialMe.guest;
+
   const refresh = useCallback(async () => {
+    if (guest) return;
     const response = await fetch("/api/me", { cache: "no-store" });
     if (response.status === 401) {
       router.push("/login");
@@ -48,7 +51,7 @@ export function AppShell({
     }
     setError(null);
     setMe((await response.json()) as MeResponse);
-  }, [router]);
+  }, [guest, router]);
 
   const patch = useCallback((partial: Partial<MeResponse>) => {
     setMe((current) => (current ? { ...current, ...partial } : current));
@@ -90,8 +93,8 @@ export function AppShell({
   }, [toast]);
 
   return (
-    <MeContext.Provider value={{ me, refresh, patch }}>
-      <OnboardingTour email={initialMe.email}>
+    <MeContext.Provider value={{ me, refresh, patch, announce }}>
+      <OnboardingTour email={guest ? null : initialMe.email}>
       <div className="relative mx-auto flex min-h-full w-full max-w-5xl flex-col px-4 pt-6 pb-24 md:pb-6">
         {me?.background ? (
           <div
@@ -106,10 +109,21 @@ export function AppShell({
               <Link href="/" data-sound="menu" className="font-display text-xl font-bold">
                 PIMP YOUR WHEEL
               </Link>
-              <span className="rounded-full border bg-white/20 border-line px-3 py-1 text-sm">
-                {me ? PLAN_LABEL[me.plan] : "…"}
-              </span>
+              {me && !me.guest ? (
+                <span className="rounded-full border bg-white/20 border-line px-3 py-1 text-sm">
+                  {PLAN_LABEL[me.plan]}
+                </span>
+              ) : null}
             </div>
+            {me?.guest ? (
+              <Link
+                href="/login"
+                data-sound="menu"
+                className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 font-display text-base text-[#1a1408]"
+              >
+                Войти
+              </Link>
+            ) : (
             <Link
               href="/profile"
               data-tour="profile"
@@ -141,6 +155,7 @@ export function AppShell({
                 </span>
               </span>
             </Link>
+            )}
           </div>
           <nav data-tour="nav" className="hidden flex-wrap items-center justify-start gap-1 rounded-3xl text-base md:flex">
             {NAV.map((item) => (

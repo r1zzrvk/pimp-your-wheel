@@ -15,8 +15,8 @@ export default async function LoginPage() {
 
   return (
     <AuthForm
-      title="С возвращением"
-      subtitle="Войди и крути сегодняшние попытки."
+      title="С возвращением!"
+      subtitle="Войди в аккаунт и продолжай игру."
       submitLabel="Войти"
       alternateHref="/register"
       alternateLabel="Нет аккаунта? Зарегистрироваться"

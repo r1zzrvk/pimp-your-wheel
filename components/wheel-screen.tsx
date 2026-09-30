@@ -7,10 +7,12 @@ import { useMe } from "@/components/me-context";
 import { Icon } from "@/components/icon";
 import { Wheel } from "@/components/wheel";
 import { LIMIT_RESET_LABEL } from "@/lib/economy";
+import { GUEST_SPIN_LIMIT, pickGuestReward, readGuestSpinsLeft, writeGuestSpinsLeft } from "@/lib/guest-spins";
 import { closePaymentWindow, goToPayment, openPaymentWindow } from "@/lib/payment-window";
 import type { SpinResponse } from "@/lib/types";
 import { playBonus, playCoinWin, playLoss, playSpinWhoosh, primeSounds } from "@/lib/sounds";
 import { nextSpinRotation } from "@/lib/wheel";
+import { wheelById } from "@/lib/wheels";
 
 const ERROR_TEXT: Record<string, string> = {
   LIMIT_REACHED: "Крутки на сегодня закончились",
@@ -80,6 +82,16 @@ export function WheelScreen({
   }, [resetNotice, refresh]);
 
   useEffect(() => {
+    if (!me?.guest) return;
+    const left = readGuestSpinsLeft();
+    patch({
+      spinsLeft: left,
+      spinsUsed: GUEST_SPIN_LIMIT - left,
+      spinsLimit: GUEST_SPIN_LIMIT,
+    });
+  }, [me?.guest, patch]);
+
+  useEffect(() => {
     if (spinning) return;
     const id = window.setTimeout(() => setXpVisible(false), 30_000);
     return () => window.clearTimeout(id);
@@ -89,7 +101,7 @@ export function WheelScreen({
   const profile = me;
 
   async function chooseWheel(wheelId: string) {
-    if (switching || spinning || busy) return;
+    if (profile.guest || switching || spinning || busy) return;
     setSwitching(true);
     setError(null);
     const response = await fetch("/api/wheels", {
@@ -127,21 +139,63 @@ export function WheelScreen({
   }
 
   async function spin() {
-    if (busy || spinning || profile.spinsLeft <= 0) return;
+    if (busy || spinning) return;
+    const guestLeft = profile.guest ? readGuestSpinsLeft() : profile.spinsLeft;
+    if (guestLeft <= 0) return;
     primeSounds();
     setBusy(true);
     setError(null);
     setResult(null);
-    const response = await fetch("/api/spins", { method: "POST" });
-    const data = (await response.json()) as SpinResponse & { error?: string };
-    if (!response.ok) {
-      setError(ERROR_TEXT[data.error ?? ""] ?? "Крутка не удалась");
-      setBusy(false);
-      await refresh();
-      return;
+
+    let segmentIndex: number;
+    let coins: number;
+    let extraSpins: number;
+    let spinsLeft: number;
+    let spinsLimit: number;
+    let nextResetAt = profile.nextResetAt;
+    let balance = profile.balance;
+    let streak = profile.streak;
+    let xp = profile.xp;
+    let level = profile.level;
+    let xpIntoLevel = profile.xpIntoLevel;
+    let xpForNext = profile.xpForNext;
+    let guaranteedJackpot = profile.guaranteedJackpot;
+    let achievements: SpinResponse["achievements"] = [];
+
+    if (profile.guest) {
+      const reward = pickGuestReward(wheelById(profile.wheel.id).segments);
+      segmentIndex = reward.segmentIndex;
+      coins = reward.coins;
+      extraSpins = reward.extraSpins;
+      spinsLeft = guestLeft - 1;
+      spinsLimit = GUEST_SPIN_LIMIT;
+      writeGuestSpinsLeft(spinsLeft);
+    } else {
+      const response = await fetch("/api/spins", { method: "POST" });
+      const data = (await response.json()) as SpinResponse & { error?: string };
+      if (!response.ok) {
+        setError(ERROR_TEXT[data.error ?? ""] ?? "Крутка не удалась");
+        setBusy(false);
+        await refresh();
+        return;
+      }
+      segmentIndex = data.segmentIndex;
+      coins = data.coins;
+      extraSpins = data.extraSpins;
+      spinsLeft = data.spinsLeft;
+      spinsLimit = data.spinsLimit;
+      nextResetAt = data.nextResetAt;
+      balance = data.balance;
+      streak = data.streak;
+      xp = data.xp;
+      level = data.level;
+      xpIntoLevel = data.xpIntoLevel;
+      xpForNext = data.xpForNext;
+      guaranteedJackpot = data.guaranteedJackpot;
+      achievements = data.achievements ?? [];
     }
 
-    const cell = Number(profile.wheel.segments[data.segmentIndex]?.label);
+    const cell = Number(profile.wheel.segments[segmentIndex]?.label);
     if (Number.isInteger(cell) && cell < 0) {
       pendingTone.current = "error";
       pendingLabel.current = `- ${-cell} монет`;
@@ -149,23 +203,31 @@ export function WheelScreen({
       pendingSpins.current = 0;
     } else {
       pendingTone.current = "success";
-      pendingLabel.current = spinResultLabel(data.coins, data.extraSpins);
-      pendingCoins.current = data.coins;
-      pendingSpins.current = data.extraSpins;
+      pendingLabel.current = spinResultLabel(coins, extraSpins);
+      pendingCoins.current = coins;
+      pendingSpins.current = extraSpins;
     }
-    pendingAchievements.current = data.achievements ?? [];
-    patch({
-      balance: data.balance,
-      spinsLeft: data.spinsLeft,
-      spinsUsed: data.spinsLimit - data.spinsLeft,
-      nextResetAt: data.nextResetAt,
-      streak: data.streak,
-      xp: data.xp,
-      level: data.level,
-      xpIntoLevel: data.xpIntoLevel,
-      xpForNext: data.xpForNext,
-      guaranteedJackpot: data.guaranteedJackpot,
-    });
+    pendingAchievements.current = achievements;
+    patch(
+      profile.guest
+        ? {
+            spinsLeft,
+            spinsUsed: spinsLimit - spinsLeft,
+            spinsLimit,
+          }
+        : {
+            balance,
+            spinsLeft,
+            spinsUsed: spinsLimit - spinsLeft,
+            nextResetAt,
+            streak,
+            xp,
+            level,
+            xpIntoLevel,
+            xpForNext,
+            guaranteedJackpot,
+          },
+    );
     setXpVisible(true);
     setSpinning(true);
     playSpinWhoosh(skipAnimation);
@@ -173,7 +235,7 @@ export function WheelScreen({
       requestAnimationFrame(() => {
         const next = nextSpinRotation(
           rotationRef.current,
-          data.segmentIndex,
+          segmentIndex,
           profile.wheel.segments.length,
           skipAnimation ? 0 : 5,
         );
@@ -203,9 +265,6 @@ export function WheelScreen({
           ))}
         </select>
 
-      <p className="mt-3 text-muted">
-        Осталось {profile.spinsLeft} из {profile.spinsLimit}
-      </p>
       {profile.guaranteedJackpot ? (
         <p className="mt-3 text-sm text-accent">Первая крутка сегодня — 100 монет</p>
       ) : null}
@@ -277,23 +336,31 @@ export function WheelScreen({
             setResult(label);
             window.setTimeout(() => {
               if (popupId.current === id) setResult(null);
-            }, 1000);
+            }, profile.guest ? 2500 : 1000);
           }}
         />
         </div>
+        <p className="mt-3 text-muted">
+        Осталось {profile.spinsLeft} /  {profile.spinsLimit} спинов
+      </p>
       </div>
       {result ? (
         <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center">
-          <p
-            className={`rounded-2xl px-6 py-4 font-display text-xl text-white shadow-2xl ${
+          <div
+            className={`rounded-2xl px-6 py-4 text-center text-white shadow-2xl ${
               resultTone === "error" ? "bg-red-500" : "bg-emerald-500"
             }`}
           >
-            {result}
-          </p>
+            <p className="font-display text-xl">{result}</p>
+            {profile.guest ? (
+              <Link href="/register" className="pointer-events-auto mt-2 block text-sm underline">
+                Войдите, чтобы сохранить выигрыш
+              </Link>
+            ) : null}
+          </div>
         </div>
       ) : null}
-      {profile.spinsLeft <= 0 ? (
+      {!profile.guest && profile.spinsLeft <= 0 ? (
         <div className="mt-6 flex flex-col items-center gap-3">
           <ResetCountdown
             nextResetAt={profile.nextResetAt}
@@ -337,15 +404,25 @@ export function WheelScreen({
         </span>
         Пропустить анимацию
       </label>
-      <button
-        type="button"
-        data-tour="spin"
-        onClick={() => void spin()}
-        disabled={busy || spinning || profile.spinsLeft <= 0}
-        className="w-full sm:w-auto mt-3 rounded-full bg-accent px-10 py-4 font-display text-lg text-[#1a1408] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-muted"
-      >
-        {spinning ? "Крутится…" : profile.spinsLeft <= 0 ? "Лимит на сегодня" : "Крутить"}
-      </button>
+      {profile.guest && profile.spinsLeft <= 0 ? (
+        <Link
+          href="/register"
+          data-sound="menu"
+          className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-accent px-10 py-4 font-display text-lg text-[#1a1408] sm:w-auto"
+        >
+          Войти
+        </Link>
+      ) : (
+        <button
+          type="button"
+          data-tour="spin"
+          onClick={() => void spin()}
+          disabled={busy || spinning || profile.spinsLeft <= 0}
+          className="mt-3 w-full rounded-full bg-accent px-10 py-4 font-display text-lg text-[#1a1408] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-muted sm:w-auto"
+        >
+          {spinning ? "Крутится…" : profile.spinsLeft <= 0 ? "Лимит на сегодня" : "Крутить"}
+        </button>
+      )}
     </section>
   );
 }

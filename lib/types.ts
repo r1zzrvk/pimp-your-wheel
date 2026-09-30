@@ -38,6 +38,7 @@ export type Progress = {
 };
 
 export type MeResponse = Progress & {
+  guest: boolean;
   email: string;
   displayName: string;
   avatar: string;

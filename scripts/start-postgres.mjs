@@ -17,6 +17,9 @@ const postgres = new EmbeddedPostgres({
   password: "roulette",
   port: 5432,
   persistent: true,
+  // Windows initdb otherwise uses the ANSI code page (WIN1251 on this machine).
+  // That encoding cannot store the emoji used for avatars and achievements.
+  initdbFlags: ["--locale=C", "--encoding=UTF8"],
 });
 
 if (!existsSync(`${databaseDir}/PG_VERSION`)) {

@@ -17,8 +17,8 @@ export function LevelsScreen() {
 
   return (
     <section className="mx-auto max-w-xl">
-      <h1 className="font-display text-4xl">Уровни</h1>
-      <p className="mt-3 text-muted">Каждая крутка даёт {XP_PER_SPIN} XP. Сейчас уровень {me.level}.</p>
+      <h1 className="font-display text-4xl">Уровни и награды</h1>
+      <p className="mt-3 text-muted">Продвигайся дальше, открывай новые уровни и забирай награды.</p>
       <ol className="mt-8 space-y-2">
         {visible.map((row) => {
           const current = row.level === me.level;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMe } from "@/components/me-context";
 import type { AchievementUnlock } from "@/lib/types";
 import { Wheel } from "@/components/wheel";
@@ -29,6 +30,23 @@ const TABS = [
 
 type ShopTab = (typeof TABS)[number]["id"];
 
+function GuestAction({ label }: { label: string }) {
+  return (
+    <>
+      <button
+        type="button"
+        disabled
+        className="rounded-full bg-white/10 px-4 py-2 text-sm text-muted"
+      >
+        {label}
+      </button>
+      <Link href="/register" data-sound="menu" className="self-center text-sm text-accent">
+        Войдите, чтобы купить
+      </Link>
+    </>
+  );
+}
+
 export function ShopScreen() {
   const { me, refresh, announce } = useMe();
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +56,7 @@ export function ShopScreen() {
   if (!me) return null;
 
   async function buy(slug: string) {
+    if (me?.guest) return;
     setPending(slug);
     setError(null);
     const response = await fetch("/api/shop/purchase", {
@@ -59,6 +78,7 @@ export function ShopScreen() {
     slug: string | null,
     kind: "wheel" | "pointer" | "background" | "animation" = "wheel",
   ) {
+    if (me?.guest) return;
     setPending(slug ?? `unequip-${kind}`);
     setError(null);
     const response = await fetch("/api/inventory/equip", {
@@ -76,7 +96,7 @@ export function ShopScreen() {
 
   async function toggleLegend() {
     const current = me;
-    if (!current || !LEGEND || current.level < LEGEND.level) return;
+    if (!current || current.guest || !LEGEND || current.level < LEGEND.level) return;
     setPending("legend");
     setError(null);
     const response = await fetch("/api/theme", {
@@ -99,7 +119,7 @@ export function ShopScreen() {
     <section>
       <h1 className="font-display text-4xl">Магазин</h1>
       <p className="mt-3 max-w-xl text-muted">
-        Колёса собраны в сеты: у каждого свой цвет и центр. «Легенда» и «Сияние» открываются с уровнем.
+      Скины, анимации и всё для твоей коллекции.
       </p>
       {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
       <div className="mt-6 flex flex-wrap gap-2">
@@ -163,6 +183,9 @@ export function ShopScreen() {
                   </>
                 ) : null}
                 {item.owned && !worn ? (
+                  me.guest ? (
+                    <GuestAction label="Надеть" />
+                  ) : (
                   <button
                     type="button"
                     disabled={busy}
@@ -171,8 +194,12 @@ export function ShopScreen() {
                   >
                     Надеть
                   </button>
+                  )
                 ) : null}
                 {!item.owned ? (
+                  me.guest ? (
+                    <GuestAction label={`Купить за ${item.priceCoins}`} />
+                  ) : (
                   <button
                     type="button"
                     disabled={busy || me.balance < item.priceCoins}
@@ -181,6 +208,7 @@ export function ShopScreen() {
                   >
                     Купить за {item.priceCoins}
                   </button>
+                  )
                 ) : null}
               </div>
             </li>
@@ -283,6 +311,9 @@ export function ShopScreen() {
                     </>
                   ) : null}
                   {!locked && item.owned && !item.equipped ? (
+                    me.guest ? (
+                      <GuestAction label="Надеть" />
+                    ) : (
                     <button
                       type="button"
                       disabled={busy}
@@ -291,8 +322,12 @@ export function ShopScreen() {
                     >
                       Надеть
                     </button>
+                    )
                   ) : null}
                   {!locked && !item.owned ? (
+                    me.guest ? (
+                      <GuestAction label={`Купить за ${item.priceCoins}`} />
+                    ) : (
                     <button
                       type="button"
                       disabled={busy || me.balance < item.priceCoins}
@@ -301,6 +336,7 @@ export function ShopScreen() {
                     >
                       Купить за {item.priceCoins}
                     </button>
+                    )
                   ) : null}
                 </div>
               </li>
@@ -350,6 +386,9 @@ export function ShopScreen() {
                     </>
                   ) : null}
                   {!locked && item.owned && !item.equipped ? (
+                    me.guest ? (
+                      <GuestAction label="Надеть" />
+                    ) : (
                     <button
                       type="button"
                       disabled={busy}
@@ -358,8 +397,12 @@ export function ShopScreen() {
                     >
                       Надеть
                     </button>
+                    )
                   ) : null}
                   {!locked && !item.owned ? (
+                    me.guest ? (
+                      <GuestAction label={`Купить за ${item.priceCoins}`} />
+                    ) : (
                     <button
                       type="button"
                       disabled={busy || me.balance < item.priceCoins}
@@ -368,6 +411,7 @@ export function ShopScreen() {
                     >
                       Купить за {item.priceCoins}
                     </button>
+                    )
                   ) : null}
                 </div>
               </li>
@@ -419,6 +463,9 @@ export function ShopScreen() {
                     </>
                   ) : null}
                   {!locked && item.owned && !item.equipped ? (
+                    me.guest ? (
+                      <GuestAction label="Надеть" />
+                    ) : (
                     <button
                       type="button"
                       disabled={busy}
@@ -427,8 +474,12 @@ export function ShopScreen() {
                     >
                       Надеть
                     </button>
+                    )
                   ) : null}
                   {!locked && !item.owned ? (
+                    me.guest ? (
+                      <GuestAction label={`Купить за ${item.priceCoins}`} />
+                    ) : (
                     <button
                       type="button"
                       disabled={busy || me.balance < item.priceCoins}
@@ -437,6 +488,7 @@ export function ShopScreen() {
                     >
                       Купить за {item.priceCoins}
                     </button>
+                    )
                   ) : null}
                 </div>
               </li>

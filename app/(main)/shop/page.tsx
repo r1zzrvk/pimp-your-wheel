@@ -3,7 +3,7 @@ import { ShopScreen } from "@/components/shop-screen";
 
 export const metadata = meta({
   title: "Магазин",
-  description: "Скины колеса, фоны, указатели и анимации.",
+  description: "Скины, анимации и всё для твоей коллекции.",
 });
 
 export default function ShopPage() {
