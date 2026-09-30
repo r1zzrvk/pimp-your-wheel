@@ -202,9 +202,7 @@ export function WheelScreen({
             </option>
           ))}
         </select>
-        <span aria-hidden className="pointer-events-none absolute inset-y-0 right-4 grid place-items-center text-muted">
-          ▾
-        </span>
+
       <p className="mt-3 text-muted">
         Осталось {profile.spinsLeft} из {profile.spinsLimit}
       </p>
